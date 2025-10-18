@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CollabChat - Classroom Collaboration Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 95%;
+            max-width: 1200px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2980b9, #3498db);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .role-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-tab.active {
+            color: #2980b9;
+            background: white;
+        }
+
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #2980b9;
+        }
+
+        .nav-tab:hover {
+            background: #e9ecef;
+        }
+
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tab-content {
+            display: none;
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Chat Styles */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .message.own {
+            background: #2980b9;
+            color: white;
+            margin-left: auto;
+        }
+
+        .message.other {
+            background: white;
+            border: 1px solid #e9ecef;
+        }
+
+        .message-header {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input input:focus {
+            border-color: #2980b9;
+        }
+
+        .chat-input button {
+            padding: 12px 25px;
+            background: #2980b9;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+
+        .chat-input button:hover {
+            background: #1f5f8b;
+        }
+
+        /* Whiteboard Styles */
+        .whiteboard-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .whiteboard-toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            align-items: center;
+        }
+
+        .tool-group {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .tool-group label {
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .color-btn {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .color-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .color-btn.active {
+            border-color: #2980b9;
+            transform: scale(1.2);
+        }
+
+        .brush-size {
+            padding: 5px 10px;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            background: white;
+        }
+
+        .whiteboard-canvas {
+            flex: 1;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            background: white;
+            cursor: crosshair;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Games Styles */
+        .games-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game-selection {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .game-card {
+            width: 200px;
+            height: 150px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            text-align: center;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .game-card h3 {
+            margin-bottom: 10px;
+        }
+
+        .tic-tac-toe {
+            display: grid;
+            grid-template-columns: repeat(3, 80px);
+            grid-template-rows: repeat(3, 80px);
+            gap: 5px;
+            margin: 20px 0;
+        }
+
+        .ttt-cell {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .ttt-cell:hover {
+            background: #e9ecef;
+        }
+
+        .ttt-cell.x {
+            color: #e74c3c;
+        }
+
+        .ttt-cell.o {
+            color: #3498db;
+        }
+
+        /* Quiz Styles */
+        .quiz-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .quiz-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .quiz-controls input, .quiz-controls textarea {
+            padding: 10px;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .quiz-controls button {
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .quiz-question {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .quiz-option {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .quiz-option:hover {
+            border-color: #2980b9;
+            background: #f8f9fa;
+        }
+
+        .quiz-option.selected {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .quiz-timer {
+            background: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+        }
+
+        /* Chat Styles */
+        .chat-section {
+            display: flex;
+            height: 100%;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .chat-sidebar {
+            width: 250px;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .group-header {
+            padding: 15px;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .group-header button {
+            padding: 5px 10px;
+            background: #2980b9;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .group-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .group-item {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .group-item:hover {
+            background: #f8f9fa;
+        }
+
+        .group-item.active {
+            background: #e3f2fd;
+            color: #2980b9;
+        }
+
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        .chat-header {
+            padding: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 20px;
+        }
+
+        /* Dialog styles */
+        .dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .dialog-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .dialog-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .dialog-buttons button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .dialog-buttons button:first-child {
+            background: #e9ecef;
+        }
+
+        .dialog-buttons button:last-child {
+            background: #2980b9;
+            color: white;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 15px;
+            border-radius: 15px;
+            margin: 5px 0;
+            word-wrap: break-word;
+        }
+
+        .message.sent {
+            background: #2980b9;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.received {
+            background: white;
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+
+        .message-meta {
+            font-size: 12px;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .chat-input button {
+            padding: 10px 20px;
+            background: #2980b9;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+
+        .chat-input button:hover {
+            background: #3498db;
+        }
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Login Styles */
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 400px;
+            text-align: center;
+        }
+
+        .login-container h1 {
+            color: #2980b9;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: #2980b9;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #2980b9, #3498db);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-container {
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .nav-tab {
+                flex: 1 1 50%;
+                font-size: 12px;
+                padding: 10px 15px;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen (restored classic layout) -->
+    <div id="loginScreen" class="login-container fade-in">
+        <div style="max-width: 500px; margin: 30px auto; text-align:center;">
+            <h1 style="color: #2c3e50; font-size: 32px; margin-bottom: 10px;">🎓 CollabChat</h1>
+            <p style="color: #6c757d; font-size: 16px;">Classroom Collaboration Platform</p>
+        </div>
+
+        <div style="max-width: 500px; margin: 0 auto;">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username" required />
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required />
+            </div>
+
+                <div class="form-group">
+                    <label for="role">Role</label>
+                    <select id="role" name="role" required>
+                        <option value="student">Student</option>
+                        <option value="teacher">Teacher</option>
+                    </select>
+                </div>
+
+            <button class="login-btn" onclick="login()" style="width:100%;">Login to Classroom</button>
+
+            <div style="text-align:center; margin-top:12px;">
+                <a href="register.jsp" style="color: #3498db; text-decoration: none; font-weight: 600;">Create Account</a>
+            </div>
+
+            <div style="margin-top: 20px; padding: 12px; background: #f8f9fa; border-radius: 10px; text-align: center;">
+                <h4 style="margin:0 0 8px 0;">Demo Credentials</h4>
+                <div style="font-size:13px; color:#6c757d">Username: <strong>testuser</strong></div>
+                <div style="font-size:13px; color:#6c757d">Password: <strong>password123</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="appContainer" class="app-container hidden">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">🎓 CollabChat</div>
+            <div class="user-info">
+                <span id="currentUser">User</span>
+                <span id="userRole" class="role-badge">Student</span>
+                <button onclick="logout()" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 15px; border-radius: 15px; cursor: pointer;">Logout</button>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-tab="homeTab">🏠 Home</button>
+            <button class="nav-tab" data-tab="chatSection">💬 Chat</button>
+            <button class="nav-tab" data-tab="whiteboardTab">🎨 Whiteboard</button>
+            <button class="nav-tab" data-tab="gamesTab">🎮 Games</button>
+            <button class="nav-tab" data-tab="quizTab">📝 Quiz</button>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Home Tab -->
+            <div id="homeTab" class="tab-content active">
+                <div style="text-align: center; padding: 40px;">
+                    <h2 style="color: #2980b9; margin-bottom: 20px;">Welcome to CollabChat!</h2>
+                    <p style="color: #6c757d; font-size: 16px; margin-bottom: 30px;">
+                        Your collaborative classroom platform is ready. Use the tabs above to access different features.
+                    </p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 40px;">
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                            <h3 style="color: #2980b9;">💬 Real-time Chat</h3>
+                            <p style="color: #6c757d; font-size: 14px;">Communicate with classmates and teachers instantly</p>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                            <h3 style="color: #2980b9;">🎨 Collaborative Whiteboard</h3>
+                            <p style="color: #6c757d; font-size: 14px;">Draw and sketch together in real-time</p>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                            <h3 style="color: #2980b9;">🎮 Educational Games</h3>
+                            <p style="color: #6c757d; font-size: 14px;">Play interactive games with your peers</p>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                            <h3 style="color: #2980b9;">📝 Live Quizzes</h3>
+                            <p style="color: #6c757d; font-size: 14px;">Answer questions and see results instantly</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Tab -->
+            <div id="chatTab" class="tab-content">
+                <div class="chat-container">
+                    <div id="chatMessages" class="chat-messages">
+                        <div class="message other">
+                            <div class="message-header">System • Just now</div>
+                            <div>Welcome to CollabChat! Start typing to begin chatting.</div>
+                        </div>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="messageInput" placeholder="Type your message..." onkeypress="handleChatKeyPress(event)">
+                        <button onclick="sendMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Whiteboard Tab -->
+            <div id="whiteboardTab" class="tab-content">
+                <div class="whiteboard-container">
+                    <div class="whiteboard-toolbar">
+                        <div class="tool-group">
+                            <label>Colors:</label>
+                            <div class="color-btn active" style="background: #000;" onclick="selectColor('#000')"></div>
+                            <div class="color-btn" style="background: #e74c3c;" onclick="selectColor('#e74c3c')"></div>
+                            <div class="color-btn" style="background: #3498db;" onclick="selectColor('#3498db')"></div>
+                            <div class="color-btn" style="background: #27ae60;" onclick="selectColor('#27ae60')"></div>
+                            <div class="color-btn" style="background: #f39c12;" onclick="selectColor('#f39c12')"></div>
+                            <div class="color-btn" style="background: #9b59b6;" onclick="selectColor('#9b59b6')"></div>
+                        </div>
+                        <div class="tool-group">
+                            <label>Brush Size:</label>
+                            <select id="brushSize" onchange="changeBrushSize()">
+                                <option value="2">Thin</option>
+                                <option value="4" selected>Medium</option>
+                                <option value="8">Thick</option>
+                                <option value="12">Extra Thick</option>
+                            </select>
+                        </div>
+                        <div class="tool-group">
+                            <button onclick="clearWhiteboard()" style="background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Clear</button>
+                            <button onclick="undoLastStroke()" style="background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Undo</button>
+                        </div>
+                    </div>
+                    <canvas id="whiteboardCanvas" class="whiteboard-canvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Games Tab -->
+            <div id="gamesTab" class="tab-content">
+                <div class="games-container">
+                    <h2 style="color: #2980b9; margin-bottom: 30px;">Choose a Game</h2>
+                    <div class="game-selection">
+                        <div class="game-card" onclick="startTicTacToe()">
+                            <h3>🎯 Tic-Tac-Toe</h3>
+                            <p>Classic 3x3 grid game</p>
+                        </div>
+                        <div class="game-card" onclick="startMemoryGame()">
+                            <h3>🧠 Memory Match</h3>
+                            <p>Find matching pairs</p>
+                        </div>
+                    </div>
+                    
+                    <div id="ticTacToeGame" class="hidden">
+                        <h3 style="margin-bottom: 20px;">Tic-Tac-Toe</h3>
+                        <div class="tic-tac-toe" id="tttGrid">
+                            <div class="ttt-cell" onclick="makeMove(0)"></div>
+                            <div class="ttt-cell" onclick="makeMove(1)"></div>
+                            <div class="ttt-cell" onclick="makeMove(2)"></div>
+                            <div class="ttt-cell" onclick="makeMove(3)"></div>
+                            <div class="ttt-cell" onclick="makeMove(4)"></div>
+                            <div class="ttt-cell" onclick="makeMove(5)"></div>
+                            <div class="ttt-cell" onclick="makeMove(6)"></div>
+                            <div class="ttt-cell" onclick="makeMove(7)"></div>
+                            <div class="ttt-cell" onclick="makeMove(8)"></div>
+                        </div>
+                        <button onclick="resetTicTacToe()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 20px;">Reset Game</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Tab -->
+            <div id="quizTab" class="tab-content">
+                <div class="quiz-container">
+                    <div id="teacherControls" class="quiz-controls hidden">
+                        <input type="text" id="quizQuestion" placeholder="Enter your question...">
+                        <input type="text" id="option1" placeholder="Option 1">
+                        <input type="text" id="option2" placeholder="Option 2">
+                        <input type="text" id="option3" placeholder="Option 3">
+                        <input type="text" id="option4" placeholder="Option 4">
+                        <button onclick="sendQuiz()">Send Quiz</button>
+                    </div>
+                    
+                    <div id="studentQuiz" class="hidden">
+                        <div class="quiz-timer" id="quizTimer">Time: 30s</div>
+                        <div class="quiz-question" id="quizQuestionDisplay">
+                            <h3 id="questionText">Question will appear here...</h3>
+                        </div>
+                        <div class="quiz-options" id="quizOptions">
+                            <!-- Options will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <div id="quizWaiting" style="text-align: center; padding: 40px;">
+                        <h3 style="color: #6c757d;">Waiting for quiz...</h3>
+                        <p style="color: #6c757d;">Your teacher will send a quiz question soon.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = '';
+        let currentRole = '';
+        let currentColor = '#000';
+        let currentBrushSize = 4;
+        let whiteboardCanvas;
+        let whiteboardCtx;
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let strokes = [];
+        let tttBoard = ['', '', '', '', '', '', '', '', ''];
+        let currentPlayer = 'X';
+        let quizTimer = null;
+        let quizTimeLeft = 30;
+
+        // Initialize the application
+        function init() {
+            // Initialize whiteboard canvas
+            whiteboardCanvas = document.getElementById('whiteboardCanvas');
+            whiteboardCtx = whiteboardCanvas.getContext('2d');
+            
+            // Set canvas size
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // Initialize whiteboard events
+            initWhiteboard();
+            
+            // Show teacher controls if user is teacher
+            updateUIForRole();
+
+            // Load groups and start message polling for chat
+            try { loadGroups(); } catch(e) { console.error('loadGroups error', e); }
+            if (!window._chatPoller) {
+                window._chatPoller = setInterval(fetchMessages, 3000);
+            }
+        }
+
+        // Auto-detect server session and update UI if logged in
+        (function checkServerSession(){
+            // Attempt to fetch session info from the server app
+            fetch('/CollabChat/session', { credentials: 'same-origin' })
+                .then(resp => resp.json())
+                .then(data => {
+                    if (data && data.ok) {
+                        currentUser = data.username || '';
+                        // keep role as 'student' by default; server does not expose role currently
+                        currentRole = 'student';
+                        document.getElementById('loginScreen').classList.add('hidden');
+                        document.getElementById('appContainer').classList.remove('hidden');
+                        document.getElementById('currentUser').textContent = currentUser;
+                        document.getElementById('userRole').textContent = currentRole.charAt(0).toUpperCase() + currentRole.slice(1);
+                        init();
+                    }
+                }).catch(err => {
+                    // ignore, user will use the client-side login form
+                    console.log('session check failed', err);
+                });
+        })();
+
+        // Login function
+        function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            if (!username || !password) {
+                alert('Please enter both username and password');
+                return;
+            }
+
+            // POST credentials to server login endpoint (AJAX)
+            const params = new URLSearchParams();
+            params.append('username', username);
+            params.append('password', password);
+
+            fetch('/CollabChat/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params.toString(),
+                credentials: 'same-origin'
+            }).then(resp => {
+                if (resp.status === 200) {
+                    // Successful login; validate session and initialize UI
+                    currentUser = username;
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('appContainer').classList.remove('hidden');
+                    document.getElementById('appContainer').classList.add('fade-in');
+                    document.getElementById('currentUser').textContent = currentUser;
+                    // Refresh session-aware UI
+                    init();
+                } else if (resp.status === 401) {
+                    alert('Invalid credentials');
+                } else {
+                    resp.text().then(t => alert('Login failed: ' + t));
+                }
+            }).catch(err => { alert('Login error: ' + err); });
+        }
+
+        // Logout function
+        function logout() {
+            currentUser = '';
+            currentRole = '';
+            document.getElementById('appContainer').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('loginScreen').classList.add('fade-in');
+        }
+
+        // Tab navigation
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all nav buttons
+            document.querySelectorAll('.nav-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // Add active class to clicked nav button
+            event.target.classList.add('active');
+            
+            // Initialize tab-specific features
+            if (tabName === 'whiteboard') {
+                resizeCanvas();
+            }
+        }
+
+        // Update UI based on user role
+        function updateUIForRole() {
+            if (currentRole === 'teacher') {
+                document.getElementById('teacherControls').classList.remove('hidden');
+                document.getElementById('quizWaiting').classList.add('hidden');
+            } else {
+                document.getElementById('teacherControls').classList.add('hidden');
+                document.getElementById('quizWaiting').classList.remove('hidden');
+            }
+        }
+
+        // Chat functionality
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Chat functionality
+        let lastMessageTimestamp = 0;
+        let currentGroupId = null;
+        
+        function setCurrentGroup(groupId) {
+            currentGroupId = groupId;
+            // Clear existing messages
+            document.getElementById('chatMessages').innerHTML = '';
+            // Load messages for this group
+            fetchMessages();
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            
+            if (!message || !currentGroupId) return;
+            
+            fetch('/CollabChat/message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `groupId=${currentGroupId}&message=${encodeURIComponent(message)}`,
+                credentials: 'include'
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Clear input
+                    messageInput.value = '';
+                    // Add message to chat immediately
+                    addMessageToChat(currentUser, message, true);
+                    // Fetch new messages
+                    fetchMessages();
+                } else {
+                    console.error('Failed to send message:', response.status);
+                }
+            })
+            .catch(error => {
+                console.error('Error sending message:', error);
+            });
+        }
+        
+        function fetchMessages() {
+            if (!currentGroupId) return;
+            
+            fetch(`/CollabChat/message?groupId=${currentGroupId}`, {
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.messages) {
+                    const chatMessages = document.getElementById('chatMessages');
+                    let shouldScroll = chatMessages.scrollTop + chatMessages.clientHeight >= chatMessages.scrollHeight - 50;
+                    
+                    data.messages.forEach(msg => {
+                        if (msg.timestamp > lastMessageTimestamp) {
+                            addMessageToChat(msg.username, msg.content, msg.userId === currentUserId);
+                            lastMessageTimestamp = msg.timestamp;
+                        }
+                    });
+                    
+                    if (shouldScroll) {
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching messages:', error);
+            });
+        }
+        
+        // Start periodic message fetch
+        setInterval(fetchMessages, 3000);
+        
+        // Group management
+        function loadGroups() {
+            fetch('/CollabChat/group', {
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.groups) {
+                    const groupList = document.getElementById('groupList');
+                    groupList.innerHTML = '';
+                    data.groups.forEach(group => {
+                        const groupDiv = document.createElement('div');
+                        groupDiv.className = 'group-item';
+                        if (group.id === currentGroupId) {
+                            groupDiv.className += ' active';
+                        }
+                        groupDiv.textContent = group.name;
+                        groupDiv.onclick = () => selectGroup(group.id, group.name);
+                        groupList.appendChild(groupDiv);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error loading groups:', error);
+            });
+        }
+        
+        function selectGroup(groupId, groupName) {
+            // Update UI
+            document.querySelectorAll('.group-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.textContent === groupName) {
+                    item.classList.add('active');
+                }
+            });
+            
+            document.getElementById('currentGroupName').textContent = groupName;
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendButton').disabled = false;
+            
+            // Set current group and load messages
+            setCurrentGroup(groupId);
+        }
+        
+        function showCreateGroupDialog() {
+            document.getElementById('createGroupDialog').classList.remove('hidden');
+            document.getElementById('groupName').value = '';
+            document.getElementById('groupName').focus();
+        }
+        
+        function hideCreateGroupDialog() {
+            document.getElementById('createGroupDialog').classList.add('hidden');
+        }
+        
+        function createGroup() {
+            const groupName = document.getElementById('groupName').value.trim();
+            if (!groupName) return;
+
+                const role = document.getElementById('role').value; // Get the selected role
+            fetch('/CollabChat/group', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `name=${encodeURIComponent(groupName)}`,
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.groupId) {
+                    hideCreateGroupDialog();
+                    loadGroups();
+                    // Select the newly created group
+                    selectGroup(data.groupId, groupName);
+                }
+            })
+            .catch(error => {
+                console.error('Error creating group:', error);
+            });
+        }
+        
+        // Load groups initially and periodically
+        loadGroups();
+        setInterval(loadGroups, 10000);
+        
+        // Tab switching
+        function switchTab(tabId) {
+            // Hide all content sections
+            document.querySelectorAll('.main-content > div').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Show selected section
+            document.getElementById(tabId).classList.remove('hidden');
+            
+            // Update tab buttons
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.getAttribute('data-tab') === tabId) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            // Special handling for chat tab
+            if (tabId === 'chatSection') {
+                loadGroups();
+                fetchMessages();
+            }
+        }
+        
+        // Initialize tab click handlers
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                switchTab(tab.getAttribute('data-tab'));
+            });
+        });
+
+        function addMessageToChat(sender, message, isOwn) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
+            
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            
+            messageDiv.innerHTML = `
+                <div class="message-header">${sender} • ${timeString}</div>
+                <div>${message}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Whiteboard functionality
+        function resizeCanvas() {
+            const container = whiteboardCanvas.parentElement;
+            whiteboardCanvas.width = container.clientWidth - 4;
+            whiteboardCanvas.height = container.clientHeight - 4;
+            
+            // Redraw all strokes
+            redrawWhiteboard();
+        }
+
+        function initWhiteboard() {
+            whiteboardCanvas.addEventListener('mousedown', startDrawing);
+            whiteboardCanvas.addEventListener('mousemove', draw);
+            whiteboardCanvas.addEventListener('mouseup', stopDrawing);
+            whiteboardCanvas.addEventListener('mouseout', stopDrawing);
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const rect = whiteboardCanvas.getBoundingClientRect();
+            lastX = e.clientX - rect.left;
+            lastY = e.clientY - rect.top;
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            const rect = whiteboardCanvas.getBoundingClientRect();
+            const currentX = e.clientX - rect.left;
+            const currentY = e.clientY - rect.top;
+            
+            // Draw on canvas
+            whiteboardCtx.beginPath();
+            whiteboardCtx.moveTo(lastX, lastY);
+            whiteboardCtx.lineTo(currentX, currentY);
+            whiteboardCtx.strokeStyle = currentColor;
+            whiteboardCtx.lineWidth = currentBrushSize;
+            whiteboardCtx.lineCap = 'round';
+            whiteboardCtx.stroke();
+            
+            // Store stroke for undo functionality
+            strokes.push({
+                startX: lastX,
+                startY: lastY,
+                endX: currentX,
+                endY: currentY,
+                color: currentColor,
+                size: currentBrushSize
+            });
+            
+            lastX = currentX;
+            lastY = currentY;
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function selectColor(color) {
+            currentColor = color;
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function changeBrushSize() {
+            currentBrushSize = parseInt(document.getElementById('brushSize').value);
+        }
+
+        function clearWhiteboard() {
+            whiteboardCtx.clearRect(0, 0, whiteboardCanvas.width, whiteboardCanvas.height);
+            strokes = [];
+        }
+
+        function undoLastStroke() {
+            if (strokes.length === 0) return;
+            
+            strokes.pop();
+            redrawWhiteboard();
+        }
+
+        function redrawWhiteboard() {
+            whiteboardCtx.clearRect(0, 0, whiteboardCanvas.width, whiteboardCanvas.height);
+            
+            strokes.forEach(stroke => {
+                whiteboardCtx.beginPath();
+                whiteboardCtx.moveTo(stroke.startX, stroke.startY);
+                whiteboardCtx.lineTo(stroke.endX, stroke.endY);
+                whiteboardCtx.strokeStyle = stroke.color;
+                whiteboardCtx.lineWidth = stroke.size;
+                whiteboardCtx.lineCap = 'round';
+                whiteboardCtx.stroke();
+            });
+        }
+
+        // Games functionality
+        function startTicTacToe() {
+            document.querySelector('.game-selection').classList.add('hidden');
+            document.getElementById('ticTacToeGame').classList.remove('hidden');
+            resetTicTacToe();
+        }
+
+        function startMemoryGame() {
+            alert('Memory Game coming soon!');
+        }
+
+        function makeMove(index) {
+            if (tttBoard[index] !== '') return;
+            
+            tttBoard[index] = currentPlayer;
+            updateTTTDisplay();
+            
+            if (checkWinner()) {
+                setTimeout(() => {
+                    alert(`${currentPlayer} wins!`);
+                    resetTicTacToe();
+                }, 100);
+                return;
+            }
+            
+            if (tttBoard.every(cell => cell !== '')) {
+                setTimeout(() => {
+                    alert('It\'s a tie!');
+                    resetTicTacToe();
+                }, 100);
+                return;
+            }
+            
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        }
+
+        function updateTTTDisplay() {
+            const cells = document.querySelectorAll('.ttt-cell');
+            cells.forEach((cell, index) => {
+                cell.textContent = tttBoard[index];
+                cell.className = `ttt-cell ${tttBoard[index].toLowerCase()}`;
+            });
+        }
+
+        function checkWinner() {
+            const winningCombinations = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+                [0, 4, 8], [2, 4, 6] // Diagonals
+            ];
+            
+            return winningCombinations.some(combination => {
+                const [a, b, c] = combination;
+                return tttBoard[a] && tttBoard[a] === tttBoard[b] && tttBoard[a] === tttBoard[c];
+            });
+        }
+
+        function resetTicTacToe() {
+            tttBoard = ['', '', '', '', '', '', '', '', ''];
+            currentPlayer = 'X';
+            updateTTTDisplay();
+        }
+
+        // Quiz functionality
+        function sendQuiz() {
+            const question = document.getElementById('quizQuestion').value.trim();
+            const options = [
+                document.getElementById('option1').value.trim(),
+                document.getElementById('option2').value.trim(),
+                document.getElementById('option3').value.trim(),
+                document.getElementById('option4').value.trim()
+            ];
+            
+            if (!question || options.some(opt => !opt)) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            // Simulate sending quiz to all students
+            console.log('Quiz sent:', { question, options });
+            
+            // Clear form
+            document.getElementById('quizQuestion').value = '';
+            options.forEach((_, index) => {
+                document.getElementById(`option${index + 1}`).value = '';
+            });
+            
+            // Show success message
+            alert('Quiz sent to all students!');
+        }
+
+        function startQuizTimer() {
+            quizTimeLeft = 30;
+            const timerElement = document.getElementById('quizTimer');
+            
+            quizTimer = setInterval(() => {
+                quizTimeLeft--;
+                timerElement.textContent = `Time: ${quizTimeLeft}s`;
+                
+                if (quizTimeLeft <= 0) {
+                    clearInterval(quizTimer);
+                    timerElement.textContent = 'Time\'s up!';
+                    timerElement.style.background = '#6c757d';
+                }
+            }, 1000);
+        }
+
+        function selectQuizOption(optionIndex) {
+            // Remove previous selection
+            document.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // Add selection to clicked option
+            event.target.classList.add('selected');
+            
+            // Simulate answer submission
+            console.log(`Student ${currentUser} selected option ${optionIndex + 1}`);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add some demo messages to chat
+            setTimeout(() => {
+                if (document.getElementById('chatMessages')) {
+                    addMessageToChat('Teacher', 'Welcome to our collaborative classroom!', false);
+                    addMessageToChat('Student1', 'Hello everyone!', false);
+                }
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CollabChat Minimal AJAX Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        input, button { margin: 0.5em 0; }
+        #result { margin-top: 1em; color: green; }
+        #error { margin-top: 1em; color: red; }
+    </style>
+</head>
+<body>
+    <h2>Login (AJAX to /login)</h2>
+    <form id="loginForm">
+        <input type="text" id="username" placeholder="Username" required><br>
+        <input type="password" id="password" placeholder="Password" required><br>
+        <button type="submit">Login</button>
+    </form>
+    <div id="loginStatus"></div>
+
+    <h2>Fetch Groups (AJAX to /group)</h2>
+    <button id="fetchGroupsBtn" disabled>Fetch My Groups</button>
+    <pre id="groupsResult"></pre>
+
+    <script>
+    // Handle login
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const statusDiv = document.getElementById('loginStatus');
+        statusDiv.textContent = 'Logging in...';
+        try {
+            const resp = await fetch('login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
+                credentials: 'include' // Important: send/receive cookies
+            });
+            if (resp.ok) {
+                const text = await resp.text();
+                statusDiv.textContent = 'Login successful!';
+                document.getElementById('fetchGroupsBtn').disabled = false;
+            } else {
+                statusDiv.textContent = 'Login failed: ' + resp.status;
+            }
+        } catch (err) {
+            statusDiv.textContent = 'Login error: ' + err;
+        }
+    });
+
+    // Fetch groups after login
+    document.getElementById('fetchGroupsBtn').addEventListener('click', async function() {
+        const resultPre = document.getElementById('groupsResult');
+        resultPre.textContent = 'Fetching...';
+        try {
+            const resp = await fetch('group', {
+                method: 'GET',
+                credentials: 'include' // Send session cookie
+            });
+            if (resp.ok) {
+                const data = await resp.text();
+                resultPre.textContent = data;
+            } else {
+                resultPre.textContent = 'Fetch failed: ' + resp.status;
+            }
+        } catch (err) {
+            resultPre.textContent = 'Fetch error: ' + err;
+        }
+    });
+    </script>
+</body>
+</html>

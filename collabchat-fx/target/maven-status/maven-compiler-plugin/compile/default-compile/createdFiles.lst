@@ -1,0 +1,13 @@
+com\collabchat\fx\DrawingAction.class
+com\collabchat\fx\GameManager.class
+com\collabchat\fx\GameManager$GameType.class
+com\collabchat\fx\DrawingAction$ActionType.class
+com\collabchat\fx\WhiteboardManager.class
+com\collabchat\fx\QuizResults.class
+com\collabchat\fx\GamesPanel.class
+com\collabchat\fx\Demo.class
+com\collabchat\fx\GameSession.class
+com\collabchat\fx\QuizResponse.class
+com\collabchat\fx\WhiteboardPanel.class
+com\collabchat\fx\WhiteboardInstance.class
+com\collabchat\fx\models\Group.class
